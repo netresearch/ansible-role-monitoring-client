@@ -1,0 +1,42 @@
+---
+
+# NodeExporter + cAdvisor for monitoring clients
+# ---------------------------------------------------------------------------------------------------------------------
+
+# Container startup
+- name: Monitoring Clients | Start docker container for NodeExporter
+  docker_container:
+    api_version: "1.39"
+    name: node-exporter
+    image: prom/node-exporter:v0.18.1
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+    restart_policy: unless-stopped
+    published_ports:
+      - "9100:9100"
+    labels:
+      org.label-schema.group: monitoring
+
+- name: Monitoring Clients | Start docker container for cAdvisor
+  docker_container:
+    api_version: "1.39"
+    name: cadvisor
+    image: google/cadvisor:v0.33.0
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /cgroup:/cgroup:ro
+    published_ports:
+      - "8080:8080"
+    restart_policy: unless-stopped
+    labels:
+      org.label-schema.group: monitoring
